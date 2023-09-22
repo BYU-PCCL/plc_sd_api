@@ -7,7 +7,24 @@ from diffusers.utils import load_image
 
 from fastapi import FastAPI, UploadFile, Form
 from typing import Annotated
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+import requests
+import os
+from data_model import User
+from db import Data
+import base64
 
+from io import BytesIO
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 controlnet = ControlNetModel.from_pretrained(
     "lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16
@@ -27,13 +44,15 @@ pipe.enable_xformers_memory_efficient_attention()
 pipe.enable_model_cpu_offload()
 
 
-app = FastAPI()
-
 @app.post("/process_image/")
 async def process_image(image: Annotated[UploadFile, Form()]):
 
-    image = load_image(image)
-    
+    image_data = image.file.read()
+
+    image_stream = BytesIO(image_data)
+
+    image = Image.open(image_stream)
+
 
     negative_prompt = 'low quality, bad quality, sketches'
     image = np.array(image)
@@ -46,8 +65,14 @@ async def process_image(image: Annotated[UploadFile, Form()]):
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)
     image = pipe("aerial view, a futuristic research complex in a bright foggy jungle, hard lighting",image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
-    #image.save('bird_canny_out.png')
+    
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
+    image_bytes = image_bytes.getvalue()
 
+    base64_image = base64.b64encode(image_bytes).decode()
+
+    return {"image_base64": base64_image}
 
 if __name__ == "__main__":
     import uvicorn
