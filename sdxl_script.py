@@ -29,10 +29,10 @@ pipe.enable_model_cpu_offload()
 
 app = FastAPI()
 
-@app.get("/process_image/")
-async def process_image():
+@app.post("/process_image/")
+async def process_image(image: Annotated[UploadFile, Form()]):
 
-    image = load_image("https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/sd_controlnet/hf-logo.png")
+    image = load_image(image)
     
 
     negative_prompt = 'low quality, bad quality, sketches'
