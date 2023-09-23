@@ -1,6 +1,8 @@
 from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
 import torch
 
+from pydantic import BaseModel
+
 controlnet = ControlNetModel.from_pretrained(
     "lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16
 )
@@ -31,3 +33,20 @@ control_net_pipe.scheduler = UniPCMultistepScheduler.from_config(control_net_pip
 control_net_pipe.enable_xformers_memory_efficient_attention()
 
 control_net_pipe.enable_model_cpu_offload()
+
+
+class BaseData(BaseModel):
+    username: str
+
+
+class ImageReq(BaseData):
+    prompt: str
+
+
+class VoicePrompt(BaseData):
+    text: str
+
+
+class AiAudioResponse(BaseModel):
+    content: str
+    success: bool

@@ -1,5 +1,4 @@
-from db import Data
-
+from .db import Data
 
 class SDBObj:
     def __init__(self, ref_url):
