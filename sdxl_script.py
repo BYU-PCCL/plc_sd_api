@@ -26,6 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 controlnet = ControlNetModel.from_pretrained(
     "lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16
 )
@@ -44,6 +45,20 @@ pipe.enable_xformers_memory_efficient_attention()
 pipe.enable_model_cpu_offload()
 
 
+control_net_scribble = ControlNetModel.from_pretrained(
+    "lllyasviel/sd-controlnet-scribble", torch_dtype=torch.float16
+)
+
+control_net_pipe = StableDiffusionControlNetPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5", controlnet=control_net_scribble, safety_checker=None, torch_dtype=torch.float16
+)
+
+control_net_pipe.scheduler = UniPCMultistepScheduler.from_config(control_net_pipe.scheduler.config)
+control_net_pipe.enable_xformers_memory_efficient_attention()
+
+control_net_pipe.enable_model_cpu_offload()
+
+
 @app.post("/process_image/")
 async def process_image(image: Annotated[UploadFile, Form()]):
 
@@ -52,7 +67,6 @@ async def process_image(image: Annotated[UploadFile, Form()]):
     image_stream = BytesIO(image_data)
 
     image = Image.open(image_stream)
-
 
     negative_prompt = 'low quality, bad quality, sketches'
     image = np.array(image)
@@ -64,7 +78,7 @@ async def process_image(image: Annotated[UploadFile, Form()]):
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)
-    image = pipe("aerial view, a futuristic research complex in a bright foggy jungle, hard lighting",image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
+    image = control_net_pipe("hyper realistic image of a black cat with a white spot taken with a Nikon camera",image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
     
     image_bytes = BytesIO()
     image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
