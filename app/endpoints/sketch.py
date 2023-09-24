@@ -34,7 +34,7 @@ async def process_image(image: Annotated[UploadFile, Form()]):
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)
-    image = control_net_pipe("hyper realistic image of a black cat with a white spot taken with a Nikon camera",image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
+    image = control_net_pipe("aerial view, a futuristic research complex in a bright foggy jungle, hard lighting",image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
     
     image_bytes = BytesIO()
     image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed

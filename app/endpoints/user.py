@@ -3,6 +3,7 @@ import requests
 
 from plc_sd_api.config import BaseData
 from ..data.data_model import User
+from ..data.db import Data
 import os
 
 router = APIRouter()
@@ -22,6 +23,21 @@ def has_voice(username: str, headers, delete: bool=False):
                     requests.delete(delete_voice_url, headers=headers)
                 return True
     return False
+
+@router.post("/get_orig_portrait")
+def get_orig_portrait(user: BaseData):
+    storage = Data.get_storage_instance()
+
+    bucket = storage.bucket()
+    if user.username != "":
+        file_path = f'images/{user.username}-orig-portrait.jpg'
+        blob = bucket.blob(file_path)
+
+        # Download the file as bytes
+        file_bytes = blob.download_as_bytes()
+
+        return file_bytes
+
 
 @router.post("/login")
 def login(user: BaseData):

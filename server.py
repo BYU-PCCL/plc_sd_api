@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import requests
 
-from .app.endpoints import sketch, user, voice
+from .app.endpoints import sketch, user, clone
 
 app = FastAPI()
 
@@ -19,7 +19,7 @@ app.add_middleware(
 
 app.include_router(sketch.router)
 app.include_router(user.router)
-app.include_router(voice.router)
+app.include_router(clone.router)
 
 
 if __name__ == "__main__":

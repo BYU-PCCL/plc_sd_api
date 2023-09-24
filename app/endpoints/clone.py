@@ -108,3 +108,20 @@ def voice_prompt(text_prompt: VoicePrompt):
         return StreamingResponse(io.BytesIO(audio_data), headers=headers)
 
     return AiAudioResponse(content='', success=False)
+
+@router.post("/user_image")
+def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile, Form()]):
+    user = User(username)
+
+    storage = Data.get_storage_instance()
+    bucket = storage.bucket()
+
+    storage_filename = f"images/{username}-orig-portrait.jpg"
+    image_data = image.file.read()
+    blob = bucket.blob(storage_filename)
+    blob.upload_from_string(image_data, content_type="image/jpeg")
+    user["orig_self_portrait"] = storage_filename
+    user.save()
+
+    return
+
