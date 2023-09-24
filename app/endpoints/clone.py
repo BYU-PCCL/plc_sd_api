@@ -4,9 +4,14 @@ from fastapi.responses import StreamingResponse
 from ..data.db import Data
 from ..data.data_model import User
 from .user import has_voice
-from plc_sd_api.config import VoicePrompt
+from plc_sd_api.config import VoicePrompt, pipe
+import base64
 import os
 import io
+from io import BytesIO
+from PIL import Image
+import cv2
+import numpy as np
 
 import requests
 
@@ -125,3 +130,39 @@ def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile,
 
     return
 
+
+@router.post("/get_ai_portrait")
+def get_ai_portrait(text_prompt: VoicePrompt):
+    storage = Data.get_storage_instance()
+
+    bucket = storage.bucket()
+    if text_prompt.username != "":
+        file_path = f'images/{text_prompt.username}-orig-portrait.jpg'
+        blob = bucket.blob(file_path)
+
+        # Download the file as bytes
+        file_bytes = blob.download_as_bytes()
+
+        image = Image.open(BytesIO(file_bytes))
+
+        # negative_prompt = 'low quality, bad quality, sketches'
+        # image = np.array(image)
+
+        # low_threshold = 100
+        # high_threshold = 200
+
+        # image = cv2.Canny(image, low_threshold, high_threshold)
+        # image = image[:, :, None]
+        # image = np.concatenate([image, image, image], axis=2)
+        # image = Image.fromarray(image)
+        # image = pipe(text_prompt.text, file_bytes, num_inference_steps=20).images[0]
+        
+        # image_bytes = BytesIO()
+        # image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
+        # image_bytes = image_bytes.getvalue()
+
+        # base64_image = base64.b64encode(image_bytes).decode()
+
+        # return {"image_base64": base64_image}
+
+       
