@@ -143,26 +143,26 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         # Download the file as bytes
         file_bytes = blob.download_as_bytes()
 
-        image = Image.open(BytesIO(file_bytes))
+        image = Image.frombytes('RGBA', (128,128), file_bytes, 'raw')
 
-        # negative_prompt = 'low quality, bad quality, sketches'
-        # image = np.array(image)
+        negative_prompt = 'low quality, bad quality, sketches'
+        image = np.array(image)
 
-        # low_threshold = 100
-        # high_threshold = 200
+        low_threshold = 100
+        high_threshold = 200
 
-        # image = cv2.Canny(image, low_threshold, high_threshold)
-        # image = image[:, :, None]
-        # image = np.concatenate([image, image, image], axis=2)
-        # image = Image.fromarray(image)
-        # image = pipe(text_prompt.text, file_bytes, num_inference_steps=20).images[0]
+        image = cv2.Canny(image, low_threshold, high_threshold)
+        image = image[:, :, None]
+        image = np.concatenate([image, image, image], axis=2)
+        image = Image.fromarray(image)
+        image = pipe(text_prompt.text, image, num_inference_steps=20).images[0]
         
-        # image_bytes = BytesIO()
-        # image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
-        # image_bytes = image_bytes.getvalue()
+        image_bytes = BytesIO()
+        image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
+        image_bytes = image_bytes.getvalue()
 
-        # base64_image = base64.b64encode(image_bytes).decode()
+        base64_image = base64.b64encode(image_bytes).decode()
 
-        # return {"image_base64": base64_image}
+        return {"image_base64": base64_image}
 
        
