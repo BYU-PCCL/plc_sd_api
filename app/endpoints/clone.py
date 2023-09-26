@@ -12,7 +12,6 @@ from io import BytesIO
 from PIL import Image
 import cv2
 import numpy as np
-
 import requests
 
 router = APIRouter()
@@ -143,7 +142,18 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         # Download the file as bytes
         file_bytes = blob.download_as_bytes()
 
-        image = Image.frombytes('RGBA', (128,128), file_bytes, 'raw')
+        # image = Image.frombytes('RGBA', (128,128), file_bytes, 'raw')
+
+        # Decode the Base64 data
+        decoded_data = base64.b64decode(file_bytes[23:])
+
+        # Create a BytesIO object to wrap the decoded data
+        byte_io = io.BytesIO(decoded_data)
+
+        # Open the image using Pillow
+        image = Image.open(byte_io)
+
+        # You can now work with the 'image' object
 
         negative_prompt = 'low quality, bad quality, sketches'
         image = np.array(image)
