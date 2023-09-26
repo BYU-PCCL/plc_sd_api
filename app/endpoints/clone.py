@@ -142,8 +142,6 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         # Download the file as bytes
         file_bytes = blob.download_as_bytes()
 
-        # image = Image.frombytes('RGBA', (128,128), file_bytes, 'raw')
-
         # Decode the Base64 data
         decoded_data = base64.b64decode(file_bytes[23:])
 
@@ -172,6 +170,11 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         image_bytes = image_bytes.getvalue()
 
         base64_image = base64.b64encode(image_bytes).decode()
+
+        ai_file_path = f'images/{text_prompt.username}-ai-portrait.jpg'
+        ai_blob = bucket.blob(ai_file_path)  
+
+        ai_blob.upload_from_string(image_bytes, content_type="image/jpeg")      
 
         return {"image_base64": base64_image}
 
