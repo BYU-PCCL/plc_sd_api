@@ -119,7 +119,7 @@ def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile,
     storage_filename = f"images/{username}-orig-portrait.jpg"
     image_data = image.file.read()
     blob = bucket.blob(storage_filename)
-    blob.upload_from_string(image_data, content_type="image/jpeg")
+    blob.upload_from_string(base64.b64decode(image_data[23:]), content_type="image/jpeg")
     user["orig_self_portrait"] = storage_filename
     user.save()
 
@@ -136,11 +136,7 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         # Download the file as bytes
         file_bytes = blob.download_as_bytes()
 
-        # Decode the Base64 data
-        decoded_data = base64.b64decode(file_bytes[23:])
-
-        # Create a BytesIO object to wrap the decoded data
-        byte_io = io.BytesIO(decoded_data)
+        byte_io = io.BytesIO(file_bytes)
 
         # Open the image using Pillow
         image = Image.open(byte_io)
@@ -190,7 +186,6 @@ def get_portrait(requestObj: UserPortrait):
 
         file_bytes = blob.download_as_bytes()
 
-        # return base64.b64encode(file_bytes)
         return base64.b64encode(file_bytes)
     
 

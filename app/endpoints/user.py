@@ -1,10 +1,11 @@
 from fastapi import APIRouter
 import requests
 
-from plc_sd_api.config import BaseData
+from ...config import BaseData
 from ..data.data_model import User
 from ..data.db import Data
 import os
+import base64
 
 router = APIRouter()
 
@@ -36,7 +37,7 @@ def get_orig_portrait(user: BaseData):
         # Download the file as bytes
         file_bytes = blob.download_as_bytes()
 
-        return file_bytes
+        return base64.b64encode(file_bytes)
 
 
 @router.post("/login")
