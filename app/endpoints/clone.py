@@ -13,6 +13,7 @@ from PIL import Image
 import cv2
 import numpy as np
 import requests
+import pdb
 
 router = APIRouter()
 
@@ -192,6 +193,65 @@ def get_portrait(requestObj: UserPortrait):
         # return base64.b64encode(file_bytes)
         return base64.b64encode(file_bytes)
     
+
+@router.post("/generate_video")
+def generate_video(requestObj: UserPortrait):
+    pdb.set_trace()
+    if requestObj.portrait_type == "original":
+        file_path = f'images/{requestObj.username}-orig-portrait.jpg'
+        blob = bucket.blob(file_path)
+
+        file_bytes = blob.download_as_bytes()
+
+        image = file_bytes[23:]
+
+        # Create a BytesIO object to wrap the decoded data
+        
+    else:
+        print("PORTRAIT TYPE", requestObj.portrait_type)
+        image_file_path = f'images/{requestObj.username}-ai-portrait.jpg'
+        audio_file_path = f'audio/{requestObj.username}-ai-voice.jpg'
+
+        image_blob = bucket.blob(image_file_path)
+        audio_blob = bucket.blob(audio_file_path)
+
+        # file_bytes = blob.download_as_bytes()
+
+        # # return base64.b64encode(file_bytes)
+        # image = base64.b64encode(file_bytes)
+
+        image_download_url = image_blob.generate_signed_url(3600)
+        audio_download_url = audio_blob.generate_signed_url(3600)
+
+        url = "https://api.d-id.com/talks"
+
+        payload = {
+            "script": {
+                "type": "audio",
+                "subtitles": "false",
+                "provider": {
+                    "type": "microsoft",
+                    "voice_id": "en-US-JennyNeural"
+                },
+                "ssml": "false",
+                "audio_url": audio_download_url
+            },
+            "config": {
+                "fluent": "false",
+                "pad_audio": "0.0"
+            },
+            "source_url": image_download_url
+        }
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "Authorization": f'Bearer {os.environ["DID_API_TOKEN"]}'
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        print(response.text)
+
 
 
     
