@@ -1,10 +1,10 @@
 from fastapi import APIRouter, UploadFile, Form
 from typing import Annotated
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from ..data.db import Data
 from ..data.data_model import User
 from .user import has_voice
-from plc_sd_api.config import VoicePrompt, pipe
+from ...config import VoicePrompt, pipe, UserPortrait
 import base64
 import os
 import io
@@ -15,6 +15,10 @@ import numpy as np
 import requests
 
 router = APIRouter()
+
+storage = Data.get_storage_instance()
+
+bucket = storage.bucket()
 
 @router.post("/record")
 def record(username: Annotated[str, Form()], recording: Annotated[UploadFile, Form()]):
@@ -31,8 +35,6 @@ def record(username: Annotated[str, Form()], recording: Annotated[UploadFile, Fo
         audio_data = recording.file.read()
 
         storage_filename = f"audio/{recording.filename}"
-        storage = Data.get_storage_instance()
-        bucket = storage.bucket()
         blob = bucket.blob(storage_filename)
         blob.upload_from_string(audio_data, content_type="audio/wav")
 
@@ -68,8 +70,6 @@ def record(username: Annotated[str, Form()], recording: Annotated[UploadFile, Fo
 
 @router.post("/write_prompt")
 def voice_prompt(text_prompt: VoicePrompt):
-    storage = Data.get_storage_instance()
-    bucket = storage.bucket()
 
     user = User(text_prompt.username)
 
@@ -110,15 +110,10 @@ def voice_prompt(text_prompt: VoicePrompt):
 
         # encoded_byte_data = base64.b64encode(audio_data).decode('utf-8')
         return StreamingResponse(io.BytesIO(audio_data), headers=headers)
-
-    return AiAudioResponse(content='', success=False)
-
+    
 @router.post("/user_image")
 def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile, Form()]):
     user = User(username)
-
-    storage = Data.get_storage_instance()
-    bucket = storage.bucket()
 
     storage_filename = f"images/{username}-orig-portrait.jpg"
     image_data = image.file.read()
@@ -132,9 +127,7 @@ def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile,
 
 @router.post("/get_ai_portrait")
 def get_ai_portrait(text_prompt: VoicePrompt):
-    storage = Data.get_storage_instance()
 
-    bucket = storage.bucket()
     if text_prompt.username != "":
         file_path = f'images/{text_prompt.username}-orig-portrait.jpg'
         blob = bucket.blob(file_path)
@@ -163,7 +156,7 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         image = image[:, :, None]
         image = np.concatenate([image, image, image], axis=2)
         image = Image.fromarray(image)
-        image = pipe(text_prompt.text, image, num_inference_steps=20).images[0]
+        image = pipe(text_prompt.text, image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
         
         image_bytes = BytesIO()
         image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
@@ -178,4 +171,29 @@ def get_ai_portrait(text_prompt: VoicePrompt):
 
         return {"image_base64": base64_image}
 
-       
+
+@router.post("/get_portrait")
+def get_portrait(requestObj: UserPortrait):
+    if requestObj.portrait_type == "original":
+        file_path = f'images/{requestObj.username}-orig-portrait.jpg'
+        blob = bucket.blob(file_path)
+
+        file_bytes = blob.download_as_bytes()
+
+        return {"image_base64": file_bytes}
+    else:
+        print("PORTRAIT TYPE", requestObj.portrait_type)
+        file_path = f'images/{requestObj.username}-ai-portrait.jpg'
+
+        blob = bucket.blob(file_path)
+
+        file_bytes = blob.download_as_bytes()
+
+        # return base64.b64encode(file_bytes)
+        return base64.b64encode(file_bytes)
+    
+
+
+    
+    
+        

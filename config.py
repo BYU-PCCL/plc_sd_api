@@ -3,36 +3,39 @@ import torch
 
 from pydantic import BaseModel
 
-controlnet = ControlNetModel.from_pretrained(
-    "lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16
-)
+# controlnet = ControlNetModel.from_pretrained(
+#     "lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16
+# )
 
-pipe = StableDiffusionControlNetPipeline.from_pretrained(
-    "runwayml/stable-diffusion-v1-5", controlnet=controlnet, safety_checker=None, torch_dtype=torch.float16
-)
+# pipe = StableDiffusionControlNetPipeline.from_pretrained(
+#     "runwayml/stable-diffusion-v1-5", controlnet=controlnet, safety_checker=None, torch_dtype=torch.float16
+# )
 
-pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
+# pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
 
-# Remove if you do not have xformers installed
-# see https://huggingface.co/docs/diffusers/v0.13.0/en/optimization/xformers#installing-xformers
-# for installation instructions
-pipe.enable_xformers_memory_efficient_attention()
+# # Remove if you do not have xformers installed
+# # see https://huggingface.co/docs/diffusers/v0.13.0/en/optimization/xformers#installing-xformers
+# # for installation instructions
+# pipe.enable_xformers_memory_efficient_attention()
 
-pipe.enable_model_cpu_offload()
+# pipe.enable_model_cpu_offload()
 
 
-control_net_scribble = ControlNetModel.from_pretrained(
-    "lllyasviel/sd-controlnet-scribble", torch_dtype=torch.float16
-)
+# control_net_scribble = ControlNetModel.from_pretrained(
+#     "lllyasviel/sd-controlnet-scribble", torch_dtype=torch.float16
+# )
 
-control_net_pipe = StableDiffusionControlNetPipeline.from_pretrained(
-    "runwayml/stable-diffusion-v1-5", controlnet=control_net_scribble, safety_checker=None, torch_dtype=torch.float16
-)
+# control_net_pipe = StableDiffusionControlNetPipeline.from_pretrained(
+#     "runwayml/stable-diffusion-v1-5", controlnet=control_net_scribble, safety_checker=None, torch_dtype=torch.float16
+# )
 
-control_net_pipe.scheduler = UniPCMultistepScheduler.from_config(control_net_pipe.scheduler.config)
-control_net_pipe.enable_xformers_memory_efficient_attention()
+# control_net_pipe.scheduler = UniPCMultistepScheduler.from_config(control_net_pipe.scheduler.config)
+# control_net_pipe.enable_xformers_memory_efficient_attention()
 
-control_net_pipe.enable_model_cpu_offload()
+# control_net_pipe.enable_model_cpu_offload()
+
+control_net_pipe = "hello"
+pipe = "hello"
 
 
 class BaseData(BaseModel):
@@ -50,3 +53,6 @@ class VoicePrompt(BaseData):
 class AiAudioResponse(BaseModel):
     content: str
     success: bool
+
+class UserPortrait(BaseData):
+    portrait_type: str
