@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 import requests
 import datetime 
+import asyncio
 
 router = APIRouter()
 
@@ -187,10 +188,17 @@ def get_portrait(requestObj: UserPortrait):
         file_bytes = blob.download_as_bytes()
 
         return base64.b64encode(file_bytes)
-    
+
+def check_video_status(video_id, headers):
+
+    response = requests.get(url=f"https://api.d-id.com/talks/{video_id}", headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception("Failed to fetch video status")
 
 @router.post("/generate_video")
-def generate_video(requestObj: UserPortrait):
+async def generate_video(requestObj: UserPortrait):
 
     user = User(requestObj.username)
     if requestObj.portrait_type == "original":
@@ -234,12 +242,39 @@ def generate_video(requestObj: UserPortrait):
         "Authorization": f'Basic {os.environ["DID_API_TOKEN"]}'
     }
 
-    response = requests.post(url, json=payload, headers=headers)
+    if user.get("talk_d_id", None) != None:
+        delete_url = f"https://api.d-id.com/talks/{user['talk_d_id']}"
 
-    user["talk_d_id"] = response.text["id"]
+        delete_response = requests.delete(url=delete_url, headers=headers)
+
+        user["talk_d_id"] = None
+
+        if delete_response.status_code != 200:
+            raise Exception("FAILED TO DELETE USER VIDEO")
+        
+    response = requests.post(url, json=payload, headers=headers)
+    if response.status_code != 201:
+        raise Exception("FAILED TO CREATE NEW VIDEO")
+
+    video_id = response.json()["id"]
+    user["talk_d_id"] = video_id
     user.save()
 
-    return response.text["id"]
+    while True:
+        video_response = check_video_status(video_id, headers)
+        status = video_response["status"]
+        
+        if status == "done":
+
+            headers = {
+                "Content-Type": "video/mp4"
+            }
+            data = requests.get(url=video_response["result_url"]).content
+            return StreamingResponse(BytesIO(data), headers=headers)
+        elif status == "rejected" or status == "error":
+            raise Exception("FAILED TO RETURN VIDEO CONTENT")
+        
+        await asyncio.sleep(1)
 
         
 
