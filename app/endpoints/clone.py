@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from ..data.db import Data
 from ..data.data_model import User
 from .user import has_voice
-from ...config import VoicePrompt, pipe, UserPortrait
+from ...config import VoicePrompt, pipe, UserPortrait, BaseData
 import base64
 import os
 import io
@@ -276,10 +276,23 @@ async def generate_video(requestObj: UserPortrait):
         
         await asyncio.sleep(1)
 
-        
+@router.post("/get_user_video")
+def get_user_video(user_data: BaseData):
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": f'Basic {os.environ["DID_API_TOKEN"]}'
+    }
 
+    user = User(user_data.username)
 
-
+    if user.get("talk_d_id", None):
+        response = requests.get(url=f"https://api.d-id.com/talks/{user['talk_d_id']}", headers=headers)
+        print("RESPONSE: ", response.status_code, response.json()["status"])
+        if response.status_code == 200 and response.json()["status"] == "done":
+            headers = {
+                "Content-Type": "video/mp4"
+            }
+            data = requests.get(url=response.json()["result_url"]).content
+            return StreamingResponse(BytesIO(data), headers=headers)
     
-    
-        
