@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, Form
 from typing import Annotated
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse
 from ..data.db import Data
 from ..data.data_model import User
 from .user import has_voice
@@ -13,7 +13,7 @@ from PIL import Image
 import cv2
 import numpy as np
 import requests
-import pdb
+import datetime 
 
 router = APIRouter()
 
@@ -177,7 +177,7 @@ def get_portrait(requestObj: UserPortrait):
 
         file_bytes = blob.download_as_bytes()
 
-        return {"image_base64": file_bytes}
+        return base64.b64encode(file_bytes)
     else:
         print("PORTRAIT TYPE", requestObj.portrait_type)
         file_path = f'images/{requestObj.username}-ai-portrait.jpg'
@@ -191,61 +191,57 @@ def get_portrait(requestObj: UserPortrait):
 
 @router.post("/generate_video")
 def generate_video(requestObj: UserPortrait):
-    pdb.set_trace()
+
+    user = User(requestObj.username)
     if requestObj.portrait_type == "original":
-        file_path = f'images/{requestObj.username}-orig-portrait.jpg'
-        blob = bucket.blob(file_path)
-
-        file_bytes = blob.download_as_bytes()
-
-        image = file_bytes[23:]
-
-        # Create a BytesIO object to wrap the decoded data
+        image_file_path = f'images/{requestObj.username}-orig-portrait.jpg'
+        audio_file_path = f'audio/{requestObj.username}-ai-voice.mp3'
         
     else:
-        print("PORTRAIT TYPE", requestObj.portrait_type)
         image_file_path = f'images/{requestObj.username}-ai-portrait.jpg'
-        audio_file_path = f'audio/{requestObj.username}-ai-voice.jpg'
+        audio_file_path = f'audio/{requestObj.username}-ai-voice.mp3'
 
-        image_blob = bucket.blob(image_file_path)
-        audio_blob = bucket.blob(audio_file_path)
+    
+    image_blob = bucket.blob(image_file_path)
+    audio_blob = bucket.blob(audio_file_path)
 
-        # file_bytes = blob.download_as_bytes()
+    image_download_url = image_blob.generate_signed_url(int(datetime.datetime.now().timestamp()) + 3600, method="GET")
+    audio_download_url = audio_blob.generate_signed_url(int(datetime.datetime.now().timestamp()) + 3600, method="GET")
 
-        # # return base64.b64encode(file_bytes)
-        # image = base64.b64encode(file_bytes)
+    url = "https://api.d-id.com/talks"
 
-        image_download_url = image_blob.generate_signed_url(3600)
-        audio_download_url = audio_blob.generate_signed_url(3600)
-
-        url = "https://api.d-id.com/talks"
-
-        payload = {
-            "script": {
-                "type": "audio",
-                "subtitles": "false",
-                "provider": {
-                    "type": "microsoft",
-                    "voice_id": "en-US-JennyNeural"
-                },
-                "ssml": "false",
-                "audio_url": audio_download_url
+    payload = {
+        "script": {
+            "type": "audio",
+            "subtitles": "false",
+            "provider": {
+                "type": "microsoft",
+                "voice_id": "en-US-JennyNeural"
             },
-            "config": {
-                "fluent": "false",
-                "pad_audio": "0.0"
-            },
-            "source_url": image_download_url
-        }
-        headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "Authorization": f'Bearer {os.environ["DID_API_TOKEN"]}'
-        }
+            "ssml": "false",
+            "audio_url": audio_download_url
+        },
+        "config": {
+            "fluent": "false",
+            "pad_audio": "0.0"
+        },
+        "source_url": image_download_url,
+        "name": f"{requestObj.username}-video"
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": f'Basic {os.environ["DID_API_TOKEN"]}'
+    }
 
-        response = requests.post(url, json=payload, headers=headers)
+    response = requests.post(url, json=payload, headers=headers)
 
-        print(response.text)
+    user["talk_d_id"] = response.text["id"]
+    user.save()
+
+    return response.text["id"]
+
+        
 
 
 
