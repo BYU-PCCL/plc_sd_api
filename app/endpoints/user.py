@@ -55,13 +55,46 @@ def get_orig_portrait(user: BaseData):
             return base64.b64encode(file_bytes)
 
 
+@router.post("/signup")
+def login(user: BaseData):
+    if user.username == "":
+        return {"success": False, "message": "Error: Username field was empty"}
+    
+    db = Data.get_db_instance()
+
+    users_ref = db.reference('/users')
+
+    users = users_ref.get()
+
+    for usr in users.items():
+        if usr[1]["user_id"] == user.username:
+            return { "success": False, "message": "User Already exists, try logging in instead"}
+    
+    new_user = User(user.username)
+    new_user.initialize()
+    new_user.save()
+
+    return {"success": True}
+
+
 @router.post("/login")
 def login(user: BaseData):
     if user.username == "":
         return {"success": False, "message": "Error: Username field was empty"}
-    new_user = User(user.username)
-    new_user.initialize()
-    new_user.save()
+    
+    db = Data.get_db_instance()
+
+    users_ref = db.reference('/users')
+
+    users = users_ref.get()
+
+    for usr in users.items():
+        if usr[1]["user_id"] == user.username:
+            return { "success": True }
+    
+    return { "success": False, "message": "It looks like you don't have an account yet, go ahead and sign up"}
+
+    
 
 @router.get("/has_voice/{username}")
 def check_has_recording(username: str):
