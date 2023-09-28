@@ -127,7 +127,7 @@ def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile,
     return
 
 
-@router.post("/get_ai_portrait")
+@router.post("/make_ai_portrait")
 def get_ai_portrait(text_prompt: VoicePrompt):
 
     if text_prompt.username != "":

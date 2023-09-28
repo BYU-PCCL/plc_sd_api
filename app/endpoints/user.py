@@ -38,6 +38,21 @@ def get_orig_portrait(user: BaseData):
         file_bytes = blob.download_as_bytes()
 
         return base64.b64encode(file_bytes)
+    
+@router.post("/get_ai_portrait")
+def get_orig_portrait(user: BaseData):
+    storage = Data.get_storage_instance()
+
+    bucket = storage.bucket()
+    if user.username != "":
+        file_path = f'images/{user.username}-ai-portrait.jpg'
+        blob = bucket.blob(file_path)
+
+        # Download the file as bytes
+        if blob.exists():
+            file_bytes = blob.download_as_bytes()
+
+            return base64.b64encode(file_bytes)
 
 
 @router.post("/login")
