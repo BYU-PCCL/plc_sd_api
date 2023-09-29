@@ -25,6 +25,19 @@ def has_voice(username: str, headers, delete: bool=False):
                 return True
     return False
 
+@router.get("/has_prompt/{username}")
+def has_prompt(username: str):
+    storage = Data.get_storage_instance()
+
+    bucket = storage.bucket()
+    if username != "":
+        file_path = f'audio/{username}-ai-voice.mp3'
+        blob = bucket.blob(file_path)
+
+        if blob.exists():
+            return {"success": True}
+        return {"success": False}
+
 @router.post("/get_orig_portrait")
 def get_orig_portrait(user: BaseData):
     storage = Data.get_storage_instance()
@@ -35,9 +48,10 @@ def get_orig_portrait(user: BaseData):
         blob = bucket.blob(file_path)
 
         # Download the file as bytes
-        file_bytes = blob.download_as_bytes()
+        if blob.exists():
+            file_bytes = blob.download_as_bytes()
 
-        return base64.b64encode(file_bytes)
+            return base64.b64encode(file_bytes)
     
 @router.post("/get_ai_portrait")
 def get_orig_portrait(user: BaseData):

@@ -254,7 +254,7 @@ async def generate_video(requestObj: UserPortrait):
         
     response = requests.post(url, json=payload, headers=headers)
     if response.status_code != 201:
-        raise Exception("FAILED TO CREATE NEW VIDEO")
+        raise Exception("Failed to create video " + str(response.status_code))
 
     video_id = response.json()["id"]
     user["talk_d_id"] = video_id
@@ -288,7 +288,6 @@ def get_user_video(user_data: BaseData):
 
     if user.get("talk_d_id", None):
         response = requests.get(url=f"https://api.d-id.com/talks/{user['talk_d_id']}", headers=headers)
-        print("RESPONSE: ", response.status_code, response.json()["status"])
         if response.status_code == 200 and response.json()["status"] == "done":
             headers = {
                 "Content-Type": "video/mp4"
