@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from ..data.db import Data
 from ..data.data_model import User
 from .user import has_voice
-from ...config import VoicePrompt, pipe, UserPortrait, BaseData
+from ...config import VoicePrompt, pipe, UserPortrait, BaseData, NUM_EXCESS_BYTES
 import base64
 import os
 import io
@@ -115,16 +115,10 @@ def voice_prompt(text_prompt: VoicePrompt):
     
 @router.post("/user_image")
 def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile, Form()]):
-    user = User(username)
-
     storage_filename = f"images/{username}-orig-portrait.jpg"
     image_data = image.file.read()
     blob = bucket.blob(storage_filename)
-    blob.upload_from_string(base64.b64decode(image_data[23:]), content_type="image/jpeg")
-    user["orig_self_portrait"] = storage_filename
-    user.save()
-
-    return
+    blob.upload_from_string(base64.b64decode(image_data[NUM_EXCESS_BYTES:]), content_type="image/jpeg")
 
 
 @router.post("/make_ai_portrait")
@@ -174,17 +168,12 @@ def get_ai_portrait(text_prompt: VoicePrompt):
 def get_portrait(requestObj: UserPortrait):
     if requestObj.portrait_type == "original":
         file_path = f'images/{requestObj.username}-orig-portrait.jpg'
-        blob = bucket.blob(file_path)
-
-        file_bytes = blob.download_as_bytes()
-
-        return base64.b64encode(file_bytes)
     else:
-        print("PORTRAIT TYPE", requestObj.portrait_type)
         file_path = f'images/{requestObj.username}-ai-portrait.jpg'
 
-        blob = bucket.blob(file_path)
+    blob = bucket.blob(file_path)
 
+    if blob.exists():
         file_bytes = blob.download_as_bytes()
 
         return base64.b64encode(file_bytes)
