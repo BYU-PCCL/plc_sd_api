@@ -10,6 +10,7 @@ import base64
 router = APIRouter()
 
 def has_voice(username: str, headers, delete: bool=False):
+    print(username)
     voices_url = f'https://api.elevenlabs.io/v1/voices'
     voices_response = requests.get(voices_url, headers=headers)
 
@@ -19,6 +20,7 @@ def has_voice(username: str, headers, delete: bool=False):
     if voices_response.ok:
         for voice in voices_response.json()["voices"]:
             if voice["name"] == f'{username} voice':
+                print("FOUND VOICE")
                 if delete:
                     delete_voice_url = f'https://api.elevenlabs.io/v1/voices/{voice["voice_id"]}'
                     requests.delete(delete_voice_url, headers=headers)
