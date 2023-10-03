@@ -139,7 +139,7 @@ def generate_canny(username: Annotated[str, Form()], prompt: Annotated[str, Form
     high_threshold = 200
 
     image = np.array(image)
-    image = cv2.Canny(image, 100, 200)
+    image = cv2.Canny(image, low_threshold, high_threshold)
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)

@@ -136,7 +136,6 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         # Open the image using Pillow
         image = Image.open(byte_io)
 
-        # You can now work with the 'image' object
 
         negative_prompt = 'low quality, bad quality, sketches'
         image = np.array(image)
@@ -144,24 +143,31 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         low_threshold = 100
         high_threshold = 200
 
+        image = np.array(image)
         image = cv2.Canny(image, low_threshold, high_threshold)
         image = image[:, :, None]
         image = np.concatenate([image, image, image], axis=2)
         image = Image.fromarray(image)
-        image = pipe(text_prompt.text, image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
+        controlnet_conditioning_scale = 0.5
+
+        image = pipe(
+            prompt, negative_prompt=negative_prompt, image=image, controlnet_conditioning_scale=controlnet_conditioning_scale,
+            ).images[0]
         
         image_bytes = BytesIO()
-        image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
+        image.save(image_bytes, format="JPEG")
         image_bytes = image_bytes.getvalue()
+
+        canny_path = f"images/{username}-canny.jpg"
+        canny_blob = bucket.blob(canny_path)
+
+        canny_blob.upload_from_string(image_bytes, content_type="image/jpeg")
 
         base64_image = base64.b64encode(image_bytes).decode()
 
-        ai_file_path = f'images/{text_prompt.username}-ai-portrait.jpg'
-        ai_blob = bucket.blob(ai_file_path)  
-
-        ai_blob.upload_from_string(image_bytes, content_type="image/jpeg")      
 
         return {"image_base64": base64_image}
+
 
 
 @router.post("/get_portrait")
