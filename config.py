@@ -34,6 +34,7 @@ control_net_pipe.enable_xformers_memory_efficient_attention()
 
 control_net_pipe.enable_model_cpu_offload()
 
+NUM_EXCESS_BYTES = 23
 
 
 class BaseData(BaseModel):
