@@ -1,4 +1,4 @@
-from ...config import control_net_pipe, NUM_EXCESS_BYTES
+from ...config import control_net_pipe, NUM_EXCESS_BYTES, NUM_INFERENCE_STEPS
 from fastapi import APIRouter
 from typing import Annotated
 from diffusers.utils import load_image
@@ -40,7 +40,7 @@ async def process_image(username: Annotated[str, Form()], prompt: Annotated[str,
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)
-    image = control_net_pipe(prompt, image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
+    image = control_net_pipe(prompt, image, num_inference_steps=NUM_INFERENCE_STEPS, negative_prompt=negative_prompt).images[0]
     
     image_bytes = BytesIO()
     image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
