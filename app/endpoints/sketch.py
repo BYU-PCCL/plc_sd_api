@@ -1,4 +1,4 @@
-from ...config import control_net_pipe, NUM_EXCESS_BYTES
+from ...config import pipe, NUM_EXCESS_BYTES
 from fastapi import APIRouter
 from typing import Annotated
 from diffusers.utils import load_image
@@ -31,16 +31,20 @@ async def process_image(username: Annotated[str, Form()], prompt: Annotated[str,
     image = Image.open(image_stream)
 
     negative_prompt = 'low quality, bad quality, sketches'
-    image = np.array(image)
 
     low_threshold = 100
     high_threshold = 200
 
+    image = np.array(image)
     image = cv2.Canny(image, low_threshold, high_threshold)
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)
-    image = control_net_pipe(prompt, image, num_inference_steps=20, negative_prompt=negative_prompt).images[0]
+    controlnet_conditioning_scale = 0.5
+
+    image = pipe(
+        prompt, negative_prompt=negative_prompt, image=image, controlnet_conditioning_scale=controlnet_conditioning_scale,
+        ).images[0]
     
     image_bytes = BytesIO()
     image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed

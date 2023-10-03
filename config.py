@@ -21,20 +21,6 @@ pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
 pipe.enable_xformers_memory_efficient_attention()
 pipe.enable_model_cpu_offload()
 
-
-control_net_scribble = ControlNetModel.from_pretrained(
-    "lllyasviel/sd-controlnet-scribble", torch_dtype=torch.float16
-)
-
-control_net_pipe = StableDiffusionControlNetPipeline.from_pretrained(
-    "runwayml/stable-diffusion-v1-5", controlnet=control_net_scribble, safety_checker=None, torch_dtype=torch.float16
-)
-
-control_net_pipe.scheduler = UniPCMultistepScheduler.from_config(control_net_pipe.scheduler.config)
-control_net_pipe.enable_xformers_memory_efficient_attention()
-
-control_net_pipe.enable_model_cpu_offload()
-
 NUM_EXCESS_BYTES = 23
 # pipe = control_net_pipe = ""
 

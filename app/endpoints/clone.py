@@ -138,7 +138,6 @@ def get_ai_portrait(text_prompt: VoicePrompt):
 
 
         negative_prompt = 'low quality, bad quality, sketches'
-        image = np.array(image)
 
         low_threshold = 100
         high_threshold = 200
@@ -151,17 +150,17 @@ def get_ai_portrait(text_prompt: VoicePrompt):
         controlnet_conditioning_scale = 0.5
 
         image = pipe(
-            prompt, negative_prompt=negative_prompt, image=image, controlnet_conditioning_scale=controlnet_conditioning_scale,
+            text_prompt.text, negative_prompt=negative_prompt, image=image, controlnet_conditioning_scale=controlnet_conditioning_scale,
             ).images[0]
         
         image_bytes = BytesIO()
         image.save(image_bytes, format="JPEG")
         image_bytes = image_bytes.getvalue()
 
-        canny_path = f"images/{username}-canny.jpg"
-        canny_blob = bucket.blob(canny_path)
+        ai_portrait_path = f"images/{text_prompt.username}-ai-portrait.jpg"
+        ai_blob = bucket.blob(ai_portrait_path)
 
-        canny_blob.upload_from_string(image_bytes, content_type="image/jpeg")
+        ai_blob.upload_from_string(image_bytes, content_type="image/jpeg")
 
         base64_image = base64.b64encode(image_bytes).decode()
 
