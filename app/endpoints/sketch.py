@@ -1,13 +1,11 @@
 from ...config import control_net_pipe, NUM_EXCESS_BYTES
 from fastapi import APIRouter
 from typing import Annotated
-import numpy as np
 from diffusers.utils import load_image
 import base64
 from io import BytesIO
 from PIL import Image
 import numpy as np
-from diffusers.utils import load_image
 import cv2
 from ..data.db import Data
 

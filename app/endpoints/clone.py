@@ -261,7 +261,7 @@ async def generate_video(requestObj: UserPortrait):
             data = requests.get(url=video_response["result_url"]).content
             return StreamingResponse(BytesIO(data), headers=headers)
         elif status == "rejected" or status == "error":
-            raise Exception("FAILED TO RETURN VIDEO CONTENT")
+            return
         
         await asyncio.sleep(1)
 
