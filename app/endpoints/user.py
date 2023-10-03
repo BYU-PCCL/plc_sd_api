@@ -15,8 +15,11 @@ import base64
 
 router = APIRouter()
 
+storage = Data.get_storage_instance()
+
+bucket = storage.bucket()
+
 def has_voice(username: str, headers, delete: bool=False):
-    print(username)
     voices_url = f'https://api.elevenlabs.io/v1/voices'
     voices_response = requests.get(voices_url, headers=headers)
 
@@ -35,9 +38,6 @@ def has_voice(username: str, headers, delete: bool=False):
 
 @router.get("/has_prompt/{username}")
 def has_prompt(username: str):
-    storage = Data.get_storage_instance()
-
-    bucket = storage.bucket()
     if username != "":
         file_path = f'audio/{username}-ai-voice.mp3'
         blob = bucket.blob(file_path)
@@ -48,9 +48,7 @@ def has_prompt(username: str):
 
 @router.post("/get_orig_portrait")
 def get_orig_portrait(user: BaseData):
-    storage = Data.get_storage_instance()
 
-    bucket = storage.bucket()
     if user.username != "":
         file_path = f'images/{user.username}-orig-portrait.jpg'
         blob = bucket.blob(file_path)
@@ -63,9 +61,6 @@ def get_orig_portrait(user: BaseData):
     
 @router.post("/get_ai_portrait")
 def get_orig_portrait(user: BaseData):
-    storage = Data.get_storage_instance()
-
-    bucket = storage.bucket()
     if user.username != "":
         file_path = f'images/{user.username}-ai-portrait.jpg'
         blob = bucket.blob(file_path)
@@ -130,6 +125,9 @@ def check_has_recording(username: str):
 
 @router.post("/generate_canny")
 def check_has_recording(username: Annotated[str, Form()], prompt: Annotated[str, Form()], image: Annotated[UploadFile, Form()]):
+
+    file_path = f'images/{username}-canny.jpeg'
+
     image_data = image.file.read()
 
     image_stream = BytesIO(image_data)
@@ -152,7 +150,25 @@ def check_has_recording(username: Annotated[str, Form()], prompt: Annotated[str,
     image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
     image_bytes = image_bytes.getvalue()
 
+    canny_path = f"images/{username}-canny.jpg"
+    canny_blob = bucket.blob(canny_path)
+
+    canny_blob.upload_from_string(image_bytes, content_type="image/jpeg")
+
     base64_image = base64.b64encode(image_bytes).decode()
 
 
     return {"image_base64": base64_image}
+
+@router.get("/get_canny/{username}")
+def get_canny(username: str):
+    if username != "":
+
+        file_path = f'images/{username}-canny.jpg'
+        blob = bucket.blob(file_path)
+
+        if blob.exists():
+            file_bytes = blob.download_as_bytes()
+
+            return base64.b64encode(file_bytes)
+
