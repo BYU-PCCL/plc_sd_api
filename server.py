@@ -17,13 +17,7 @@ app.add_middleware(
 
 # app.include_router(sketch.router)
 
-@app.get("/health")
-async def health_check():
-    return {"status": "OK"}
 
-@app.get("/")
-def root():
-    return "hello world"
 
 app.include_router(sketch.router)
 app.include_router(user.router)

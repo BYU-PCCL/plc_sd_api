@@ -36,6 +36,11 @@ def has_voice(username: str, headers, delete: bool=False):
                 return True
     return False
 
+
+@router.get("/")
+def root():
+    return "hello world"
+
 @router.get("/has_prompt/{username}")
 def has_prompt(username: str):
     if username != "":
