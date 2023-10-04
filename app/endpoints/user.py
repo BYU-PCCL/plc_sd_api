@@ -129,7 +129,7 @@ def check_has_recording(username: str):
     return has_voice(username, headers)
 
 @router.post("/generate_canny")
-def generate_canny(username: Annotated[str, Form()], prompt: Annotated[str, Form()], image: Annotated[UploadFile, Form()]):
+async def generate_canny(username: Annotated[str, Form()], prompt: Annotated[str, Form()], image: Annotated[UploadFile, Form()]):
 
     image_data = image.file.read()
 

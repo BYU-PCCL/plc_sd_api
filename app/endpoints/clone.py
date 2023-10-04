@@ -23,7 +23,7 @@ storage = Data.get_storage_instance()
 bucket = storage.bucket()
 
 @router.post("/record")
-def record(username: Annotated[str, Form()], recording: Annotated[UploadFile, Form()]):
+async def record(username: Annotated[str, Form()], recording: Annotated[UploadFile, Form()]):
     user = User(username)
 
     headers = {
@@ -71,7 +71,7 @@ def record(username: Annotated[str, Form()], recording: Annotated[UploadFile, Fo
 
 
 @router.post("/write_prompt")
-def voice_prompt(text_prompt: VoicePrompt):
+async def voice_prompt(text_prompt: VoicePrompt):
 
     user = User(text_prompt.username)
 
@@ -114,7 +114,7 @@ def voice_prompt(text_prompt: VoicePrompt):
         return StreamingResponse(io.BytesIO(audio_data), headers=headers)
     
 @router.post("/user_image")
-def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile, Form()]):
+async def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile, Form()]):
     storage_filename = f"images/{username}-orig-portrait.jpg"
     image_data = image.file.read()
     blob = bucket.blob(storage_filename)
@@ -122,7 +122,7 @@ def user_portrait(username: Annotated[str, Form()], image: Annotated[UploadFile,
 
 
 @router.post("/make_ai_portrait")
-def get_ai_portrait(text_prompt: VoicePrompt):
+async async def get_ai_portrait(text_prompt: VoicePrompt):
 
     if text_prompt.username != "":
         file_path = f'images/{text_prompt.username}-orig-portrait.jpg'
@@ -165,7 +165,7 @@ def get_ai_portrait(text_prompt: VoicePrompt):
 
 
 @router.post("/get_portrait")
-def get_portrait(requestObj: UserPortrait):
+async def get_portrait(requestObj: UserPortrait):
     if requestObj.portrait_type == "original":
         file_path = f'images/{requestObj.username}-orig-portrait.jpg'
     else:
@@ -178,7 +178,7 @@ def get_portrait(requestObj: UserPortrait):
 
         return base64.b64encode(file_bytes)
 
-def check_video_status(video_id, headers):
+async def check_video_status(video_id, headers):
 
     response = requests.get(url=f"https://api.d-id.com/talks/{video_id}", headers=headers)
     if response.status_code == 200:
@@ -266,7 +266,7 @@ async def generate_video(requestObj: UserPortrait):
         await asyncio.sleep(1)
 
 @router.post("/get_user_video")
-def get_user_video(user_data: BaseData):
+async def get_user_video(user_data: BaseData):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
