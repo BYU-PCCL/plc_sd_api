@@ -122,7 +122,7 @@ async def user_portrait(username: Annotated[str, Form()], image: Annotated[Uploa
 
 
 @router.post("/make_ai_portrait")
-async async def get_ai_portrait(text_prompt: VoicePrompt):
+async def get_ai_portrait(text_prompt: VoicePrompt):
 
     if text_prompt.username != "":
         file_path = f'images/{text_prompt.username}-orig-portrait.jpg'
