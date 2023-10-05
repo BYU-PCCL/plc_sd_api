@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from ..data.db import Data
 from ..data.data_model import User
 from .user import has_voice
-from ...config import VoicePrompt, pipe, UserPortrait, BaseData, NUM_EXCESS_BYTES, NUM_INFERENCE_STEPS
+from ...config import VoicePrompt, control_net_pipe, UserPortrait, BaseData, NUM_EXCESS_BYTES, NUM_INFERENCE_STEPS
 import base64
 import os
 import io
@@ -148,7 +148,7 @@ async def get_ai_portrait(text_prompt: VoicePrompt):
         image = image[:, :, None]
         image = np.concatenate([image, image, image], axis=2)
         image = Image.fromarray(image)
-        image = pipe(text_prompt.text, image, num_inference_steps=NUM_INFERENCE_STEPS, negative_prompt=negative_prompt).images[0]
+        image = control_net_pipe(text_prompt.text, image, num_inference_steps=NUM_INFERENCE_STEPS, negative_prompt=negative_prompt).images[0]
         
         image_bytes = BytesIO()
         image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
