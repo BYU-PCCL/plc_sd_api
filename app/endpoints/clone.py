@@ -61,10 +61,12 @@ async def record(username: Annotated[str, Form()], recording: Annotated[UploadFi
             success = True
 
         user.save()
+        print(response.json())
         return {"success": success}
 
     except Exception as e:
         # Log or return the error
+        print(e)
         return {"success": False}
     finally:
         recording.file.close()

@@ -5,7 +5,7 @@ def get_voices():
 
     headers = {
         "Accept": "application/json",
-        "xi-api-key": os.environ["VOICE_API_KEY"]
+        "xi-api-key": "255cc34b6fb89bc45c61ed70050afdbe"
     }
 
     voices_url = f'https://api.elevenlabs.io/v1/voices'
