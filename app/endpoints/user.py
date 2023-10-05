@@ -7,11 +7,12 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import cv2
-from ...config import BaseData, control_net_pipe, NUM_INFERENCE_STEPS
+from ...config import BaseData, control_net_pipe, NUM_INFERENCE_STEPS, ImageReq
 from ..data.data_model import User
 from ..data.db import Data
 import os
 import base64
+import openai
 
 router = APIRouter()
 
@@ -174,4 +175,53 @@ def get_canny(username: str):
             file_bytes = blob.download_as_bytes()
 
             return base64.b64encode(file_bytes)
+
+
+@router.get("/love_letter/{username}")
+def get_love_letter(username: str):
+    user = User(username)
+
+    return user.get("love_letter", None)
+
+
+@router.post("/love_letter")
+def generate_love_letter(req: ImageReq):
+    username = req.username
+    prompt = req.prompt
+
+    user = User(username)
+
+    response = do_openai_query( prompt=prompt )
+    user["love_letter"] = response
+
+    user.save()
+
+    return response
+
+
+
+def do_openai_query( prompt, max_tokens=2048, temperature=1.0 ):
+
+
+    model = 'gpt-3.5-turbo'
+
+    messages = {"role": "system", "content": prompt },
+
+
+    response = openai.ChatCompletion.create(
+
+        messages=messages,
+
+        model=model,
+
+        max_tokens=max_tokens,
+
+        temperature=temperature,
+
+        )
+
+
+    return response['choices'][0]['message']['content']
+
+
 
