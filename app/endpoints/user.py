@@ -292,7 +292,7 @@ def generate_pitch(user_prompt: ImageReq):
 
     return response
 
-@router.get("/get_pitch/${username}")
+@router.get("/get_pitch/{username}")
 def generate_pitch(username: str):
 
 
