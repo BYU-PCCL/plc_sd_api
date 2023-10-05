@@ -13,6 +13,7 @@ from ..data.db import Data
 import os
 import base64
 import openai
+import readline
 
 router = APIRouter()
 
@@ -225,3 +226,52 @@ def do_openai_query( prompt, max_tokens=2048, temperature=1.0 ):
 
 
 
+@router.get("/high_score/{username}")
+def get_score(username: str):
+    user = User(username)
+
+    return user.get("high_score", None)
+
+@router.post("/generate_pitch")
+def generate_pitch(pitch: ImageReq):
+    my_pitch = pitch.prompt
+    username = pitch.username
+
+    user = User(username)
+
+    PROMPT = f"""The following paragraph is a sales pitch. The salesman is trying to sell blue jerseys to the University of Utah football team; this is challenging, because the University of Utah has a strong rivalry with BYU, whose primary colors are blue and white. However, the University is abandoning its long-standing color of red in favor of some sort of blue.
+
+
+
+    Analyze the sales pitch, and judge how good it is:
+
+
+
+    Beginning of pitch:
+
+    {my_pitch}
+
+    End of pitch
+
+
+
+    Now, calculate how much of your budget you're willing to spend based on the quality of the pitch. Your budget is $100M. If the pitch is absolutely perfect, you will spend all $100M. If the pitch was awful, you will spend $0M.
+
+
+
+    Answer the following question with only a number. Do NOT include any additional text.
+
+
+
+    Based on the quality of the pitch, you will spend $"""
+
+    response = do_openai_query( PROMPT )
+
+    if user.get("high_score", None) and user["high_score"] < int(response):
+        user["high_score"] = int(response)
+    elif not user.get("high_score", None):
+        user["high_score"] = int(response)
+    
+    user.save()
+
+    return "That pitch is worth $" + response
