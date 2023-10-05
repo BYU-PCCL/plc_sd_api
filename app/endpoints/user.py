@@ -7,7 +7,7 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import cv2
-from ...config import BaseData, pipe, NUM_INFERENCE_STEPS
+from ...config import BaseData, control_net_pipe, NUM_INFERENCE_STEPS
 from ..data.data_model import User
 from ..data.db import Data
 import os
@@ -147,7 +147,7 @@ async def generate_canny(username: Annotated[str, Form()], prompt: Annotated[str
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)
-    image = pipe(prompt, image, num_inference_steps=NUM_INFERENCE_STEPS, negative_prompt=negative_prompt).images[0]
+    image = control_net_pipe(prompt, image, num_inference_steps=NUM_INFERENCE_STEPS, negative_prompt=negative_prompt).images[0]
     
     image_bytes = BytesIO()
     image.save(image_bytes, format="JPEG")  # You can use JPEG or other formats as needed
