@@ -233,8 +233,8 @@ def get_score(username: str):
 
     return user.get("high_score", None)
 
-@router.post("/generate_pitch")
-def generate_pitch(pitch: ImageReq):
+@router.post("/score_pitch")
+def score_pitch(pitch: ImageReq):
     my_pitch = pitch.prompt
     username = pitch.username
 
@@ -279,3 +279,24 @@ def generate_pitch(pitch: ImageReq):
     user.save()
 
     return numeric_values
+
+
+@router.post("/generate_pitch")
+def generate_pitch(user_prompt: ImageReq):
+
+    response = do_openai_query(user_prompt.prompt)
+
+    user = User(user_prompt.username)
+    user["gpt_propmt"] = response
+    user.save()
+
+    return response
+
+@router.get("/get_pitch/${username}")
+def generate_pitch(username: str):
+
+
+    user = User(username)
+
+
+    return user.get("gpt_prompt", None)
