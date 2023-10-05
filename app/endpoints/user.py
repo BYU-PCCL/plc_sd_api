@@ -14,6 +14,7 @@ import os
 import base64
 import openai
 import readline
+import re
 
 router = APIRouter()
 
@@ -267,11 +268,14 @@ def generate_pitch(pitch: ImageReq):
 
     response = do_openai_query( PROMPT )
 
-    if user.get("high_score", None) and user["high_score"] < int(response):
-        user["high_score"] = int(response[:-1])
+    match = re.match(r'^\d+', response)
+    numeric_values = match.group()
+
+    if user.get("high_score", None) and user["high_score"] < int(numeric_values):
+        user["high_score"] = int(numeric_values)
     elif not user.get("high_score", None):
-        user["high_score"] = int(response[:-1])
+        user["high_score"] = int(numeric_values)
     
     user.save()
 
-    return response[:-1]
+    return numeric_values
