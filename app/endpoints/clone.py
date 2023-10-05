@@ -178,7 +178,7 @@ async def get_portrait(requestObj: UserPortrait):
 
         return base64.b64encode(file_bytes)
 
-async def check_video_status(video_id, headers):
+def check_video_status(video_id, headers):
 
     response = requests.get(url=f"https://api.d-id.com/talks/{video_id}", headers=headers)
     if response.status_code == 200:
