@@ -300,3 +300,25 @@ def generate_pitch(username: str):
 
 
     return user.get("gpt_prompt", None)
+
+
+@router.post("/text_to_image")
+def text_to_image(image_req: ImageReq):
+    url = "https://api.openai.com/v1/images/generations"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"
+    }
+
+    data = {
+        "prompt": image_req.prompt,
+        "n": 1,
+        "size": "1024x1024"
+    }
+
+    response = requests.post(url, json=data, headers=headers)
+
+    if response.status_code == 200:
+        result = response.json()
+        return result['data'][0]['url']
+
