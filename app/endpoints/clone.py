@@ -23,7 +23,7 @@ storage = Data.get_storage_instance()
 bucket = storage.bucket()
 
 @router.post("/record")
-async def record(username: Annotated[str, Form()], recording: Annotated[UploadFile, Form()]):
+def record(username: Annotated[str, Form()], recording: Annotated[UploadFile, Form()]):
     user = User(username)
 
     headers = {
