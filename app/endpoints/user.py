@@ -268,10 +268,10 @@ def generate_pitch(pitch: ImageReq):
     response = do_openai_query( PROMPT )
 
     if user.get("high_score", None) and user["high_score"] < int(response):
-        user["high_score"] = int(response)
+        user["high_score"] = int(response[:-1])
     elif not user.get("high_score", None):
-        user["high_score"] = int(response)
+        user["high_score"] = int(response[:-1])
     
     user.save()
 
-    return "That pitch is worth $" + response
+    return response[:-1]
