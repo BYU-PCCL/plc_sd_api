@@ -287,7 +287,7 @@ def generate_pitch(user_prompt: ImageReq):
     response = do_openai_query(user_prompt.prompt)
 
     user = User(user_prompt.username)
-    user["gpt_propmt"] = response
+    user["gpt_prompt"] = response
     user.save()
 
     return response
